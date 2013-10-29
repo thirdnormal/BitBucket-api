@@ -53,7 +53,19 @@ class Repository(object):
         """
         username = username or self.bitbucket.username or ''
         url = self.bitbucket.url('GET_USER', username=username)
-        response = self.bitbucket.dispatch('GET', url)
+        response = self.bitbucket.dispatch('GET', url, auth=self.bitbucket.auth)
+        try:
+            return (response[0], response[1]['repositories'])
+        except TypeError:
+            pass
+        return response
+
+    def visible(self, username):
+        """ Returns all repositories owned by the user specified and 
+        visible to the current user.
+        """
+        url = self.bitbucket.url('GET_USER', username=username)
+        response = self.bitbucket.dispatch('GET', url, auth=self.bitbucket.auth)
         try:
             return (response[0], response[1]['repositories'])
         except TypeError:
@@ -70,10 +82,11 @@ class Repository(object):
             pass
         return response
 
-    def get(self, repo_slug=None):
+    def get(self, repo_slug=None, owner=None):
         """ Get a single repository on Bitbucket and return it."""
         repo_slug = repo_slug or self.bitbucket.repo_slug or ''
-        url = self.bitbucket.url('GET_REPO', username=self.bitbucket.username, repo_slug=repo_slug)
+        owner = owner or self.bitbucket.username or ''
+        url = self.bitbucket.url('GET_REPO', username=owner, repo_slug=repo_slug)
         return self.bitbucket.dispatch('GET', url, auth=self.bitbucket.auth)
 
     def create(self, repo_name, scm='git', private=True, **kwargs):
